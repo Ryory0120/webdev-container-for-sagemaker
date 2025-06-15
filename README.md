@@ -1,5 +1,5 @@
 # webdev-container-for-sagemaker
-Sagemaker Studio CodeEditor上で起動したWebアプリケーションにアクセスする実験
+Sagemaker Studio AI CodeEditor上でローカルホストしたWebアプリケーションにアクセスする実験
 
 ## 目的
 - SageMakerAI CodeEditor上のコンテナのローカルホストにホスティングしたWebアプリケーションへ接続できるか検証する。
@@ -28,23 +28,30 @@ docker build --network sagemaker \
   --build-arg BASE_TAG \
   -t ${REPO_NAME:-img}:${BASE_TAG:-latest}-YYYYMMDD .
 ```
-3. AWS ECRへpush
-```bash
-# 必要に応じて権限のあるIAM/Roleを利用
-aws configure --profile <your-profile-name>
-export AWS_PROFILE=<your-profile-name>
-# push
-aws ecr create-repository --repository-name $REPO_NAME --region ap-northeast-1 2>/dev/null
-```
-4. 作業スペースをSageMakerStudio CodeEditorにてCustomイメージを指定
-
-
 ```bash
 # 試行錯誤してビルドイメージが多数できている場合は以下のコマンドから削除
 # ローカルのDocker imageを確認
 docker images
 docker image prune -a
 ```
+
+3. AWS ECRへpush
+参考：[Pushing a Docker image to an Amazon ECR private repository - AWS ECR Iser Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
+```bash
+# 必要に応じて権限のあるIAMを作成・利用
+aws configure --profile <your-profile-name>
+export AWS_PROFILE=<your-profile-name>
+# Login
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 1234567890.dkr.ecr.ap-northeast-1.amazonaws.com
+
+# Tag付け
+docker tag ${REPO_NAME:-img}:${BASE_TAG:-latest}-YYYYMMDD 1234567890.dkr.ecr.ap-northeast-1.amazonaws.com/${REPO_NAME:-img}:${BASE_TAG:-latest}-YYYYMMDD
+
+# push
+docker push 1234567890.dkr.ecr.ap-northeast-1.amazonaws.com/${REPO_NAME:-img}:${BASE_TAG:-latest}-YYYYMMDD
+```
+4. 作業スペースをSageMakerStudio CodeEditorにてCustomイメージを指定
+
 
 ## 調査メモ
 ### AWS提供のSageMakerDistribution　Imageの場合
@@ -70,5 +77,6 @@ Error response from daemon: {"message":"Forbidden. Reason: [ImageBuild] 'sagemak
 - SageMaker上でdockerを利用する場合、いくつかの制約事項があるため[公式Doc](https://docs.aws.amazon.com/sagemaker/latest/dg/docker-containers.html)を確認すること
 
 ## 参考
-- [SageMaker StudioのCode Editorを魔改造してWebアプリのプロキシ機能を追加する - Qiita](https://qiita.com/moritalous/items/859c9977dd6b923472f1)
+- 
 - [Amazon SageMaker AI Developer Guide Custom images](https://docs.aws.amazon.com/sagemaker/latest/dg/code-editor-custom-images.html)
+- [SageMaker StudioのCode Editorを魔改造してWebアプリのプロキシ機能を追加する - Qiita](https://qiita.com/moritalous/items/859c9977dd6b923472f1)
