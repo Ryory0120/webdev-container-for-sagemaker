@@ -10,6 +10,7 @@ Sagemaker Studio AI CodeEditor上でローカルホストしたWebアプリケ�
 - {簡単な説明を記載}
 
 ### Nginx
+- {簡単な説明を記載}
 
 ## 手順
 1. 作業用のSageMaker Studio CodeEditorを準備。ソースをclone
@@ -35,7 +36,7 @@ docker images
 docker image prune -a
 ```
 
-3. AWS ECRへpush
+3. AWS ECRへpush  
 参考：[Pushing a Docker image to an Amazon ECR private repository - AWS ECR Iser Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
 ```bash
 # 必要に応じて権限のあるIAMを作成・利用
@@ -50,16 +51,21 @@ docker tag ${REPO_NAME:-img}:${BASE_TAG:-latest}-YYYYMMDD 1234567890.dkr.ecr.ap-
 # push
 docker push 1234567890.dkr.ecr.ap-northeast-1.amazonaws.com/${REPO_NAME:-img}:${BASE_TAG:-latest}-YYYYMMDD
 ```
-4. 作業スペースをSageMakerStudio CodeEditorにてCustomイメージを指定
-
+4. SageMakerStudio CodeEditorにてCustomイメージを指定
+- AWSコンソール上のSageMaker>ドメイン＞ドメインの詳細＞環境よりイメージをアタッチ
+![環境](docs/img/40_sgmk_img_push_001.png)
+- ecrのURIを記入：`1234567890.dkr.ecr.ap-northeast-1.amazonaws.com/${REPO_NAME:-img}:${BASE_TAG:-latest}-YYYYMMDD`
+![環境](docs/img/40_sgmk_img_push_002.png)
+- CodeEditorを選択
+![環境](docs/img/40_sgmk_img_push_003.png)
 
 ## 調査メモ
-### AWS提供のSageMakerDistribution　Imageの場合
+### AWS提供のSageMakerDistribution ImageでPort Forwardingできるか
 - SageMaker上にて、FASTAPIのローカルサーバを立てたがアクセスできなかった。
-- `uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000`でFASTAPI起動
+- `uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000`：FASTAPI起動
 - `INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)`のログを確認
 - `https://<studio-id>.studio.aws.<region>.amazonaws.com/codeeditor/default/proxy/8000/`へアクセス
-- `Not Found`のみが表示されるWebページがでて終了
+- Webページにて`Not Found`のみが表示される
 
 ### SageMakar上でdocker imageをビルドする場合
 - `docker build -t code-editor-custom-image .`のように、`--network`を指定しない場合エラーとなる。
@@ -77,6 +83,6 @@ Error response from daemon: {"message":"Forbidden. Reason: [ImageBuild] 'sagemak
 - SageMaker上でdockerを利用する場合、いくつかの制約事項があるため[公式Doc](https://docs.aws.amazon.com/sagemaker/latest/dg/docker-containers.html)を確認すること
 
 ## 参考
-- 
-- [Amazon SageMaker AI Developer Guide Custom images](https://docs.aws.amazon.com/sagemaker/latest/dg/code-editor-custom-images.html)
+- [Amazon ECR User Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html)
+- [Custom images - Amazon SageMaker AI Developer Guide](https://docs.aws.amazon.com/sagemaker/latest/dg/code-editor-custom-images.html)
 - [SageMaker StudioのCode Editorを魔改造してWebアプリのプロキシ機能を追加する - Qiita](https://qiita.com/moritalous/items/859c9977dd6b923472f1)
